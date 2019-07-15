@@ -1,0 +1,777 @@
+-- MySQL Workbench Forward Engineering
+
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+-- -----------------------------------------------------
+-- Schema mydb
+-- -----------------------------------------------------
+
+-- -----------------------------------------------------
+-- Schema mydb
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `mydb` DEFAULT CHARACTER SET utf8 ;
+USE `mydb` ;
+
+-- -----------------------------------------------------
+-- Table `mydb`.`BANK`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`BANK` (
+  `Code` INT NOT NULL,
+  `Name` VARCHAR(45) NULL,
+  `Addr` VARCHAR(45) NULL,
+  PRIMARY KEY (`Code`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`BANK_BRANCH`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`BANK_BRANCH` (
+  `Branch_no` INT NOT NULL,
+  `Addr` VARCHAR(45) NULL,
+  `BANK_Code` INT NOT NULL,
+  PRIMARY KEY (`Branch_no`, `BANK_Code`),
+  INDEX `fk_BANK_BRANCH_BANK_idx` (`BANK_Code` ASC) VISIBLE,
+  CONSTRAINT `fk_BANK_BRANCH_BANK`
+    FOREIGN KEY (`BANK_Code`)
+    REFERENCES `mydb`.`BANK` (`Code`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`ACCOUNT`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`ACCOUNT` (
+  `Acct_no` INT NOT NULL,
+  `Balance` INT NULL,
+  `Type` VARCHAR(45) NULL,
+  `BANK_BRANCH_Branch_no` INT NOT NULL,
+  `BANK_BRANCH_BANK_Code` INT NOT NULL,
+  PRIMARY KEY (`Acct_no`),
+  INDEX `fk_ACCOUNT_BANK_BRANCH1_idx` (`BANK_BRANCH_Branch_no` ASC, `BANK_BRANCH_BANK_Code` ASC) VISIBLE,
+  CONSTRAINT `Accts`
+    FOREIGN KEY (`BANK_BRANCH_Branch_no` , `BANK_BRANCH_BANK_Code`)
+    REFERENCES `mydb`.`BANK_BRANCH` (`Branch_no` , `BANK_Code`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`LOAN`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`LOAN` (
+  `Loan_no` INT NOT NULL,
+  `Amount` INT NULL,
+  `Type` VARCHAR(45) NULL,
+  `BANK_BRANCH_Branch_no` INT NOT NULL,
+  `BANK_BRANCH_BANK_Code` INT NOT NULL,
+  PRIMARY KEY (`Loan_no`),
+  INDEX `fk_LOAN_BANK_BRANCH1_idx` (`BANK_BRANCH_Branch_no` ASC, `BANK_BRANCH_BANK_Code` ASC) VISIBLE,
+  CONSTRAINT `Loans`
+    FOREIGN KEY (`BANK_BRANCH_Branch_no` , `BANK_BRANCH_BANK_Code`)
+    REFERENCES `mydb`.`BANK_BRANCH` (`Branch_no` , `BANK_Code`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`CUSTOMER`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`CUSTOMER` (
+  `Ssn` INT NOT NULL,
+  `Name` VARCHAR(45) NULL,
+  `Addr` VARCHAR(45) NULL,
+  `Phone` INT NULL,
+  `CUSTOMERcol` VARCHAR(45) NULL,
+  PRIMARY KEY (`Ssn`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`ACCOUNT_INFO`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`ACCOUNT_INFO` (
+  `CUSTOMER_Ssn` INT NOT NULL,
+  `ACCOUNT_Acct_no` INT NOT NULL,
+  PRIMARY KEY (`CUSTOMER_Ssn`, `ACCOUNT_Acct_no`),
+  INDEX `fk_CUSTOMER_has_ACCOUNT_ACCOUNT1_idx` (`ACCOUNT_Acct_no` ASC) VISIBLE,
+  INDEX `fk_CUSTOMER_has_ACCOUNT_CUSTOMER1_idx` (`CUSTOMER_Ssn` ASC) VISIBLE,
+  CONSTRAINT `A_C`
+    FOREIGN KEY (`CUSTOMER_Ssn`)
+    REFERENCES `mydb`.`CUSTOMER` (`Ssn`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `Acount_customer`
+    FOREIGN KEY (`ACCOUNT_Acct_no`)
+    REFERENCES `mydb`.`ACCOUNT` (`Acct_no`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`LOAN_INFO`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`LOAN_INFO` (
+  `CUSTOMER_Ssn` INT NOT NULL,
+  `LOAN_Loan_no` INT NOT NULL,
+  PRIMARY KEY (`CUSTOMER_Ssn`, `LOAN_Loan_no`),
+  INDEX `fk_CUSTOMER_has_LOAN_LOAN1_idx` (`LOAN_Loan_no` ASC) VISIBLE,
+  INDEX `fk_CUSTOMER_has_LOAN_CUSTOMER1_idx` (`CUSTOMER_Ssn` ASC) VISIBLE,
+  CONSTRAINT `L_C`
+    FOREIGN KEY (`CUSTOMER_Ssn`)
+    REFERENCES `mydb`.`CUSTOMER` (`Ssn`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `Loan_customer`
+    FOREIGN KEY (`LOAN_Loan_no`)
+    REFERENCES `mydb`.`LOAN` (`Loan_no`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`AIRPORT`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`AIRPORT` (
+  `Airport_code` INT NOT NULL,
+  `City` VARCHAR(45) NULL,
+  `State` VARCHAR(45) NULL,
+  `Name` VARCHAR(45) NULL,
+  PRIMARY KEY (`Airport_code`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`FLIGHT`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`FLIGHT` (
+  `Number` INT NOT NULL,
+  `Airline` VARCHAR(45) NULL,
+  `Weekdays` CHAR(5) NULL,
+  PRIMARY KEY (`Number`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`FLIGHT_LEG`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`FLIGHT_LEG` (
+  `Leg_no` INT NOT NULL,
+  `FLIGHT_Number` INT NOT NULL,
+  PRIMARY KEY (`Leg_no`, `FLIGHT_Number`),
+  INDEX `fk_FLIGHT_LEG_FLIGHT1_idx` (`FLIGHT_Number` ASC) VISIBLE,
+  CONSTRAINT `fk_FLIGHT_LEG_FLIGHT1`
+    FOREIGN KEY (`FLIGHT_Number`)
+    REFERENCES `mydb`.`FLIGHT` (`Number`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`AIRPLANE_TYPE`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`AIRPLANE_TYPE` (
+  `Type_name` VARCHAR(15) NOT NULL,
+  `Company` VARCHAR(45) NULL,
+  `Max_seats` INT NULL,
+  PRIMARY KEY (`Type_name`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`FARE`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`FARE` (
+  `Code` INT NOT NULL,
+  `Restrictions` VARCHAR(45) NULL,
+  `Amount` INT NULL,
+  `FLIGHT_Number` INT NOT NULL,
+  PRIMARY KEY (`Code`, `FLIGHT_Number`),
+  INDEX `fk_FARE_FLIGHT1_idx` (`FLIGHT_Number` ASC) VISIBLE,
+  CONSTRAINT `fk_FARE_FLIGHT1`
+    FOREIGN KEY (`FLIGHT_Number`)
+    REFERENCES `mydb`.`FLIGHT` (`Number`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`AIRPLANE`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`AIRPLANE` (
+  `Airplane_id` INT NOT NULL,
+  `Total_no_of_seats` INT NULL,
+  `AIRPLANE_TYPE_Type_name` VARCHAR(15) NULL,
+  PRIMARY KEY (`Airplane_id`),
+  INDEX `fk_AIRPLANE_AIRPLANE_TYPE1_idx` (`AIRPLANE_TYPE_Type_name` ASC) VISIBLE,
+  CONSTRAINT `fk_AIRPLANE_AIRPLANE_TYPE1`
+    FOREIGN KEY (`AIRPLANE_TYPE_Type_name`)
+    REFERENCES `mydb`.`AIRPLANE_TYPE` (`Type_name`)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`LEG_INSTANCE`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`LEG_INSTANCE` (
+  `Date` DATETIME NOT NULL,
+  `No_of_avail_seats` INT NULL,
+  `AIRPLANE_Airplane_id` INT NOT NULL,
+  `FLIGHT_LEG_Leg_no` INT NOT NULL,
+  PRIMARY KEY (`Date`, `FLIGHT_LEG_Leg_no`),
+  INDEX `fk_LEG_INSTANCE_AIRPLANE1_idx` (`AIRPLANE_Airplane_id` ASC) VISIBLE,
+  INDEX `fk_LEG_INSTANCE_FLIGHT_LEG1_idx` (`FLIGHT_LEG_Leg_no` ASC) VISIBLE,
+  CONSTRAINT `fk_LEG_INSTANCE_AIRPLANE1`
+    FOREIGN KEY (`AIRPLANE_Airplane_id`)
+    REFERENCES `mydb`.`AIRPLANE` (`Airplane_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_LEG_INSTANCE_FLIGHT_LEG1`
+    FOREIGN KEY (`FLIGHT_LEG_Leg_no`)
+    REFERENCES `mydb`.`FLIGHT_LEG` (`Leg_no`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`SEAT`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`SEAT` (
+  `Seat_no` INT NOT NULL,
+  `LEG_INSTANCE_Date` DATETIME NOT NULL,
+  PRIMARY KEY (`Seat_no`, `LEG_INSTANCE_Date`),
+  INDEX `fk_SEAT_LEG_INSTANCE1_idx` (`LEG_INSTANCE_Date` ASC) VISIBLE,
+  CONSTRAINT `fk_SEAT_LEG_INSTANCE1`
+    FOREIGN KEY (`LEG_INSTANCE_Date`)
+    REFERENCES `mydb`.`LEG_INSTANCE` (`Date`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`AVAILABILITY`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`AVAILABILITY` (
+  `AIRPORT_Airport_code` INT NOT NULL,
+  `AIRPLANE_TYPE_Type_name` VARCHAR(15) NOT NULL,
+  PRIMARY KEY (`AIRPORT_Airport_code`, `AIRPLANE_TYPE_Type_name`),
+  INDEX `fk_AIRPORT_has_AIRPLANE_TYPE_AIRPLANE_TYPE1_idx` (`AIRPLANE_TYPE_Type_name` ASC) VISIBLE,
+  INDEX `fk_AIRPORT_has_AIRPLANE_TYPE_AIRPORT1_idx` (`AIRPORT_Airport_code` ASC) VISIBLE,
+  CONSTRAINT `fk_AIRPORT_has_AIRPLANE_TYPE_AIRPORT1`
+    FOREIGN KEY (`AIRPORT_Airport_code`)
+    REFERENCES `mydb`.`AIRPORT` (`Airport_code`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_AIRPORT_has_AIRPLANE_TYPE_AIRPLANE_TYPE1`
+    FOREIGN KEY (`AIRPLANE_TYPE_Type_name`)
+    REFERENCES `mydb`.`AIRPLANE_TYPE` (`Type_name`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`ARRIVES`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`ARRIVES` (
+  `Arr_time` INT NOT NULL,
+  `AIRPORT_Airport_code` INT NOT NULL,
+  `LEG_INSTANCE_Date` DATETIME NOT NULL,
+  `LEG_INSTANCE_FLIGHT_LEG_Leg_no` INT NOT NULL,
+  PRIMARY KEY (`Arr_time`, `AIRPORT_Airport_code`, `LEG_INSTANCE_Date`, `LEG_INSTANCE_FLIGHT_LEG_Leg_no`),
+  INDEX `fk_ARRIVES_AIRPORT1_idx` (`AIRPORT_Airport_code` ASC) VISIBLE,
+  INDEX `fk_ARRIVES_LEG_INSTANCE1_idx` (`LEG_INSTANCE_Date` ASC, `LEG_INSTANCE_FLIGHT_LEG_Leg_no` ASC) VISIBLE,
+  CONSTRAINT `fk_ARRIVES_AIRPORT1`
+    FOREIGN KEY (`AIRPORT_Airport_code`)
+    REFERENCES `mydb`.`AIRPORT` (`Airport_code`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_ARRIVES_LEG_INSTANCE1`
+    FOREIGN KEY (`LEG_INSTANCE_Date` , `LEG_INSTANCE_FLIGHT_LEG_Leg_no`)
+    REFERENCES `mydb`.`LEG_INSTANCE` (`Date` , `FLIGHT_LEG_Leg_no`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`DEPARTS`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`DEPARTS` (
+  `Dep_time` INT NOT NULL,
+  `AIRPORT_Airport_code` INT NOT NULL,
+  `LEG_INSTANCE_Date` DATETIME NOT NULL,
+  `LEG_INSTANCE_FLIGHT_LEG_Leg_no` INT NOT NULL,
+  PRIMARY KEY (`Dep_time`, `AIRPORT_Airport_code`, `LEG_INSTANCE_Date`, `LEG_INSTANCE_FLIGHT_LEG_Leg_no`),
+  INDEX `fk_DEPARTS_AIRPORT1_idx` (`AIRPORT_Airport_code` ASC) VISIBLE,
+  INDEX `fk_DEPARTS_LEG_INSTANCE1_idx` (`LEG_INSTANCE_Date` ASC, `LEG_INSTANCE_FLIGHT_LEG_Leg_no` ASC) VISIBLE,
+  CONSTRAINT `fk_DEPARTS_AIRPORT1`
+    FOREIGN KEY (`AIRPORT_Airport_code`)
+    REFERENCES `mydb`.`AIRPORT` (`Airport_code`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_DEPARTS_LEG_INSTANCE1`
+    FOREIGN KEY (`LEG_INSTANCE_Date` , `LEG_INSTANCE_FLIGHT_LEG_Leg_no`)
+    REFERENCES `mydb`.`LEG_INSTANCE` (`Date` , `FLIGHT_LEG_Leg_no`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`DEPARTURE_AIRPORT`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`DEPARTURE_AIRPORT` (
+  `Scheduled_dep_time` INT NOT NULL,
+  `AIRPORT_Airport_code` INT NOT NULL,
+  `FLIGHT_LEG_Leg_no` INT NOT NULL,
+  `FLIGHT_LEG_FLIGHT_Number` INT NOT NULL,
+  PRIMARY KEY (`Scheduled_dep_time`, `AIRPORT_Airport_code`, `FLIGHT_LEG_Leg_no`, `FLIGHT_LEG_FLIGHT_Number`),
+  INDEX `fk_DEPARTURE_AIRPORT_AIRPORT1_idx` (`AIRPORT_Airport_code` ASC) VISIBLE,
+  INDEX `fk_DEPARTURE_AIRPORT_FLIGHT_LEG1_idx` (`FLIGHT_LEG_Leg_no` ASC, `FLIGHT_LEG_FLIGHT_Number` ASC) VISIBLE,
+  CONSTRAINT `fk_DEPARTURE_AIRPORT_AIRPORT1`
+    FOREIGN KEY (`AIRPORT_Airport_code`)
+    REFERENCES `mydb`.`AIRPORT` (`Airport_code`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_DEPARTURE_AIRPORT_FLIGHT_LEG1`
+    FOREIGN KEY (`FLIGHT_LEG_Leg_no` , `FLIGHT_LEG_FLIGHT_Number`)
+    REFERENCES `mydb`.`FLIGHT_LEG` (`Leg_no` , `FLIGHT_Number`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`ARRIVAL_AIRPORT`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`ARRIVAL_AIRPORT` (
+  `Scheduled_arr_time` INT NOT NULL,
+  `AIRPORT_Airport_code` INT NOT NULL,
+  `FLIGHT_LEG_Leg_no` INT NOT NULL,
+  `FLIGHT_LEG_FLIGHT_Number` INT NOT NULL,
+  PRIMARY KEY (`Scheduled_arr_time`, `AIRPORT_Airport_code`, `FLIGHT_LEG_Leg_no`, `FLIGHT_LEG_FLIGHT_Number`),
+  INDEX `fk_ARRIVAL_AIRPORT_AIRPORT1_idx` (`AIRPORT_Airport_code` ASC) VISIBLE,
+  INDEX `fk_ARRIVAL_AIRPORT_FLIGHT_LEG1_idx` (`FLIGHT_LEG_Leg_no` ASC, `FLIGHT_LEG_FLIGHT_Number` ASC) VISIBLE,
+  CONSTRAINT `fk_ARRIVAL_AIRPORT_AIRPORT1`
+    FOREIGN KEY (`AIRPORT_Airport_code`)
+    REFERENCES `mydb`.`AIRPORT` (`Airport_code`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_ARRIVAL_AIRPORT_FLIGHT_LEG1`
+    FOREIGN KEY (`FLIGHT_LEG_Leg_no` , `FLIGHT_LEG_FLIGHT_Number`)
+    REFERENCES `mydb`.`FLIGHT_LEG` (`Leg_no` , `FLIGHT_Number`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`PERSON`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`PERSON` (
+  `Ssn` INT NOT NULL,
+  `Fname` VARCHAR(15) NULL,
+  `Minit` CHAR(5) NULL,
+  `Lname` VARCHAR(15) NULL,
+  `Bdate` DATE NULL,
+  `Sex` CHAR(2) NULL,
+  `Num` INT NULL,
+  `Street` VARCHAR(45) NULL,
+  `Apt_no` INT NULL,
+  `City` VARCHAR(45) NULL,
+  `State` VARCHAR(45) NULL,
+  `Zip` VARCHAR(15) NULL,
+  PRIMARY KEY (`Ssn`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`FACULTY`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`FACULTY` (
+  `Salary` INT NULL,
+  `Fphone` CHAR(15) NULL,
+  `Foffice` VARCHAR(45) NULL,
+  `Frank` INT NULL,
+  `PERSON_Ssn` INT NOT NULL,
+  PRIMARY KEY (`PERSON_Ssn`),
+  CONSTRAINT `fk_FACULTY_PERSON1`
+    FOREIGN KEY (`PERSON_Ssn`)
+    REFERENCES `mydb`.`PERSON` (`Ssn`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`COLLEGE`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`COLLEGE` (
+  `Cname` VARCHAR(45) NOT NULL,
+  `Dean` VARCHAR(45) NULL,
+  `Coffice` VARCHAR(45) NULL,
+  PRIMARY KEY (`Cname`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`DEPARTMENT`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`DEPARTMENT` (
+  `Dname` VARCHAR(15) NOT NULL,
+  `Dphone` INT NULL,
+  `Office` VARCHAR(45) NULL,
+  `COLLEGE_Cname` VARCHAR(45) NULL,
+  `FACULTY_PERSON_Ssn` INT NULL,
+  PRIMARY KEY (`Dname`),
+  INDEX `fk_DEPARTMENT_COLLEGE1_idx` (`COLLEGE_Cname` ASC) VISIBLE,
+  INDEX `fk_DEPARTMENT_FACULTY1_idx` (`FACULTY_PERSON_Ssn` ASC) VISIBLE,
+  CONSTRAINT `fk_DEPARTMENT_COLLEGE1`
+    FOREIGN KEY (`COLLEGE_Cname`)
+    REFERENCES `mydb`.`COLLEGE` (`Cname`)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_DEPARTMENT_FACULTY1`
+    FOREIGN KEY (`FACULTY_PERSON_Ssn`)
+    REFERENCES `mydb`.`FACULTY` (`PERSON_Ssn`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`STUDENT`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`STUDENT` (
+  `Class` INT NULL,
+  `PERSON_Ssn` INT NOT NULL,
+  `DEPARTMENT_Dname` VARCHAR(15) NULL,
+  `DEPARTMENT_Dname1` VARCHAR(15) NULL,
+  PRIMARY KEY (`PERSON_Ssn`),
+  INDEX `fk_STUDENT_DEPARTMENT1_idx` (`DEPARTMENT_Dname` ASC) VISIBLE,
+  INDEX `fk_STUDENT_DEPARTMENT2_idx` (`DEPARTMENT_Dname1` ASC) VISIBLE,
+  CONSTRAINT `fk_STUDENT_PERSON1`
+    FOREIGN KEY (`PERSON_Ssn`)
+    REFERENCES `mydb`.`PERSON` (`Ssn`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_STUDENT_DEPARTMENT1`
+    FOREIGN KEY (`DEPARTMENT_Dname`)
+    REFERENCES `mydb`.`DEPARTMENT` (`Dname`)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_STUDENT_DEPARTMENT2`
+    FOREIGN KEY (`DEPARTMENT_Dname1`)
+    REFERENCES `mydb`.`DEPARTMENT` (`Dname`)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`GRAD_STUDENT`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`GRAD_STUDENT` (
+  `College` VARCHAR(45) NULL,
+  `Degree` VARCHAR(45) NULL,
+  `Dyear` INT NULL,
+  `FACULTY_PERSON_Ssn` INT NULL,
+  `STUDENT_PERSON_Ssn` INT NOT NULL,
+  INDEX `fk_GRAD_STUDENT_FACULTY1_idx` (`FACULTY_PERSON_Ssn` ASC) VISIBLE,
+  PRIMARY KEY (`STUDENT_PERSON_Ssn`),
+  CONSTRAINT `fk_GRAD_STUDENT_FACULTY1`
+    FOREIGN KEY (`FACULTY_PERSON_Ssn`)
+    REFERENCES `mydb`.`FACULTY` (`PERSON_Ssn`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_GRAD_STUDENT_STUDENT1`
+    FOREIGN KEY (`STUDENT_PERSON_Ssn`)
+    REFERENCES `mydb`.`STUDENT` (`PERSON_Ssn`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`GRANT`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`GRANT` (
+  `No` INT NOT NULL,
+  `Title` VARCHAR(45) NULL,
+  `Agency` VARCHAR(45) NULL,
+  `St_date` DATE NULL,
+  `FACULTY_PERSON_Ssn` INT NULL,
+  PRIMARY KEY (`No`),
+  INDEX `fk_GRANT_FACULTY1_idx` (`FACULTY_PERSON_Ssn` ASC) VISIBLE,
+  CONSTRAINT `fk_GRANT_FACULTY1`
+    FOREIGN KEY (`FACULTY_PERSON_Ssn`)
+    REFERENCES `mydb`.`FACULTY` (`PERSON_Ssn`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`INSTRUCTOR_RESEARCHER`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`INSTRUCTOR_RESEARCHER` (
+  `Ssn` INT NOT NULL,
+  `Salary` INT NULL,
+  `Fphone` CHAR(15) NULL,
+  `Foffice` VARCHAR(45) NULL,
+  `Rank` INT NULL,
+  `Class` INT NULL,
+  PRIMARY KEY (`Ssn`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`COURSE`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`COURSE` (
+  `Cnumber` INT NOT NULL,
+  `Cname` VARCHAR(45) NULL,
+  `Cdesc` VARCHAR(45) NULL,
+  `DEPARTMENT_Dname` VARCHAR(15) NULL,
+  PRIMARY KEY (`Cnumber`),
+  INDEX `fk_COURSE_DEPARTMENT1_idx` (`DEPARTMENT_Dname` ASC) VISIBLE,
+  CONSTRAINT `fk_COURSE_DEPARTMENT1`
+    FOREIGN KEY (`DEPARTMENT_Dname`)
+    REFERENCES `mydb`.`DEPARTMENT` (`Dname`)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`SECTION`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`SECTION` (
+  `Sec_no` INT NOT NULL,
+  `Syear` INT NULL,
+  `Qtr` VARCHAR(10) NULL,
+  `COURSE_Cnumber` INT NOT NULL,
+  `INSTRUCTOR_RESEARCHER_Ssn` INT NULL,
+  PRIMARY KEY (`Sec_no`),
+  INDEX `fk_SECTION_COURSE1_idx` (`COURSE_Cnumber` ASC) VISIBLE,
+  INDEX `fk_SECTION_INSTRUCTOR_RESEARCHER1_idx` (`INSTRUCTOR_RESEARCHER_Ssn` ASC) VISIBLE,
+  CONSTRAINT `fk_SECTION_COURSE1`
+    FOREIGN KEY (`COURSE_Cnumber`)
+    REFERENCES `mydb`.`COURSE` (`Cnumber`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_SECTION_INSTRUCTOR_RESEARCHER1`
+    FOREIGN KEY (`INSTRUCTOR_RESEARCHER_Ssn`)
+    REFERENCES `mydb`.`INSTRUCTOR_RESEARCHER` (`Ssn`)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`CURRENT_SECTION`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`CURRENT_SECTION` (
+  `Sec_no` INT NOT NULL,
+  `Current_qtr` VARCHAR(10) NULL,
+  `Current_year` INT NULL,
+  PRIMARY KEY (`Sec_no`),
+  CONSTRAINT `section`
+    FOREIGN KEY (`Sec_no`)
+    REFERENCES `mydb`.`SECTION` (`Sec_no`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`TRANSCRIPT`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`TRANSCRIPT` (
+  `SECTION_Sec_no` INT NOT NULL,
+  `STUDENT_PERSON_Ssn` INT NOT NULL,
+  PRIMARY KEY (`SECTION_Sec_no`, `STUDENT_PERSON_Ssn`),
+  INDEX `fk_SECTION_has_STUDENT_STUDENT1_idx` (`STUDENT_PERSON_Ssn` ASC) VISIBLE,
+  INDEX `fk_SECTION_has_STUDENT_SECTION1_idx` (`SECTION_Sec_no` ASC) VISIBLE,
+  CONSTRAINT `fk_SECTION_has_STUDENT_SECTION1`
+    FOREIGN KEY (`SECTION_Sec_no`)
+    REFERENCES `mydb`.`SECTION` (`Sec_no`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_SECTION_has_STUDENT_STUDENT1`
+    FOREIGN KEY (`STUDENT_PERSON_Ssn`)
+    REFERENCES `mydb`.`STUDENT` (`PERSON_Ssn`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`REGISTERED`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`REGISTERED` (
+  `CURRENT_SECTION_Sec_no` INT NOT NULL,
+  `STUDENT_PERSON_Ssn` INT NOT NULL,
+  PRIMARY KEY (`STUDENT_PERSON_Ssn`),
+  INDEX `fk_CURRENT_SECTION_has_STUDENT_STUDENT1_idx` (`STUDENT_PERSON_Ssn` ASC) VISIBLE,
+  INDEX `fk_CURRENT_SECTION_has_STUDENT_CURRENT_SECTION1_idx` (`CURRENT_SECTION_Sec_no` ASC) VISIBLE,
+  UNIQUE INDEX `CURRENT_SECTION_Sec_no_UNIQUE` (`CURRENT_SECTION_Sec_no` ASC) VISIBLE,
+  CONSTRAINT `fk_CURRENT_SECTION_has_STUDENT_CURRENT_SECTION1`
+    FOREIGN KEY (`CURRENT_SECTION_Sec_no`)
+    REFERENCES `mydb`.`CURRENT_SECTION` (`Sec_no`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_CURRENT_SECTION_has_STUDENT_STUDENT1`
+    FOREIGN KEY (`STUDENT_PERSON_Ssn`)
+    REFERENCES `mydb`.`STUDENT` (`PERSON_Ssn`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`BELONGS`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`BELONGS` (
+  `FACULTY_PERSON_Ssn` INT NOT NULL,
+  `DEPARTMENT_Dname` VARCHAR(15) NOT NULL,
+  PRIMARY KEY (`FACULTY_PERSON_Ssn`, `DEPARTMENT_Dname`),
+  INDEX `fk_FACULTY_has_DEPARTMENT_DEPARTMENT1_idx` (`DEPARTMENT_Dname` ASC) VISIBLE,
+  INDEX `fk_FACULTY_has_DEPARTMENT_FACULTY1_idx` (`FACULTY_PERSON_Ssn` ASC) VISIBLE,
+  CONSTRAINT `fk_FACULTY_has_DEPARTMENT_FACULTY1`
+    FOREIGN KEY (`FACULTY_PERSON_Ssn`)
+    REFERENCES `mydb`.`FACULTY` (`PERSON_Ssn`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_FACULTY_has_DEPARTMENT_DEPARTMENT1`
+    FOREIGN KEY (`DEPARTMENT_Dname`)
+    REFERENCES `mydb`.`DEPARTMENT` (`Dname`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`SUPPORT`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`SUPPORT` (
+  `INSTRUCTOR_RESEARCHER_Ssn` INT NOT NULL,
+  `GRANT_No` INT NOT NULL,
+  `Start` VARCHAR(45) NULL,
+  `End` VARCHAR(45) NULL,
+  `Time` TIME NULL,
+  PRIMARY KEY (`INSTRUCTOR_RESEARCHER_Ssn`, `GRANT_No`),
+  INDEX `fk_INSTRUCTOR_RESEARCHER_has_GRANT_GRANT1_idx` (`GRANT_No` ASC) VISIBLE,
+  INDEX `fk_INSTRUCTOR_RESEARCHER_has_GRANT_INSTRUCTOR_RESEARCHER1_idx` (`INSTRUCTOR_RESEARCHER_Ssn` ASC) VISIBLE,
+  CONSTRAINT `fk_INSTRUCTOR_RESEARCHER_has_GRANT_INSTRUCTOR_RESEARCHER1`
+    FOREIGN KEY (`INSTRUCTOR_RESEARCHER_Ssn`)
+    REFERENCES `mydb`.`INSTRUCTOR_RESEARCHER` (`Ssn`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_INSTRUCTOR_RESEARCHER_has_GRANT_GRANT1`
+    FOREIGN KEY (`GRANT_No`)
+    REFERENCES `mydb`.`GRANT` (`No`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `mydb`.`COMMITEE`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`COMMITEE` (
+  `FACULTY_PERSON_Ssn` INT NOT NULL,
+  `GRAD_STUDENT_STUDENT_PERSON_Ssn` INT NOT NULL,
+  PRIMARY KEY (`FACULTY_PERSON_Ssn`, `GRAD_STUDENT_STUDENT_PERSON_Ssn`),
+  INDEX `fk_FACULTY_has_GRAD_STUDENT_GRAD_STUDENT1_idx` (`GRAD_STUDENT_STUDENT_PERSON_Ssn` ASC) VISIBLE,
+  INDEX `fk_FACULTY_has_GRAD_STUDENT_FACULTY1_idx` (`FACULTY_PERSON_Ssn` ASC) VISIBLE,
+  CONSTRAINT `fk_FACULTY_has_GRAD_STUDENT_FACULTY1`
+    FOREIGN KEY (`FACULTY_PERSON_Ssn`)
+    REFERENCES `mydb`.`FACULTY` (`PERSON_Ssn`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_FACULTY_has_GRAD_STUDENT_GRAD_STUDENT1`
+    FOREIGN KEY (`GRAD_STUDENT_STUDENT_PERSON_Ssn`)
+    REFERENCES `mydb`.`GRAD_STUDENT` (`STUDENT_PERSON_Ssn`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+USE `mydb` ;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `mydb`.`Faculty_view`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`Faculty_view` (`'Name'` INT, `Ssn` INT, `Bdate` INT, `Sex` INT, `'Address'` INT, `Foffice` INT, `Fphone` INT, `Salary` INT, `Frank` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `mydb`.`Student_view`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`Student_view` (`'Name'` INT, `Ssn` INT, `Bdate` INT, `Sex` INT, `'Address'` INT, `Class` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `mydb`.`Graduate Student`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`Graduate Student` (`'Name'` INT, `Ssn` INT, `Bdate` INT, `Sex` INT, `'Address'` INT, `Class` INT, `'Degrees'` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `mydb`.`Current Section`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`Current Section` (`Sec_no` INT, `Qtr` INT, `Syear` INT);
+
+-- -----------------------------------------------------
+-- View `mydb`.`Faculty_view`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`Faculty_view`;
+USE `mydb`;
+CREATE  OR REPLACE VIEW `Faculty_view` AS
+SELECT concat(p.Fname, ' ', p.Minit, ' ', p.Lname) as 'Name', p.Ssn, p.Bdate, p.Sex, concat(p.Num, ' ', p.Apt_no, ' ', p.City, ' ', p.State, ' ', p.Zip) as 'Address', f.Foffice, f.Fphone, f.Salary, f.Frank
+FROM FACULTY f, PERSON p;
+
+-- -----------------------------------------------------
+-- View `mydb`.`Student_view`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`Student_view`;
+USE `mydb`;
+CREATE  OR REPLACE VIEW `Student_view` AS
+SELECT concat(p.Fname, ' ', p.Minit, ' ', p.Lname) as 'Name', p.Ssn, p.Bdate, p.Sex, concat(p.Num, ' ', p.Apt_no, ' ', p.City, ' ', p.State, ' ', p.Zip) as 'Address', s.Class
+FROM PERSON p, STUDENT s;
+
+-- -----------------------------------------------------
+-- View `mydb`.`Graduate Student`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`Graduate Student`;
+USE `mydb`;
+CREATE  OR REPLACE VIEW `Graduate Student` AS
+SELECT concat(p.Fname, ' ', p.Minit, ' ', p.Lname) as 'Name', p.Ssn, p.Bdate, p.Sex, concat(p.Num, ' ', p.Apt_no, ' ', p.City, ' ', p.State, ' ', p.Zip) as 'Address', s.Class, concat(g.College, ' ', g.Degree, ' ', g.Dyear) as 'Degrees'
+FROM PERSON p, STUDENT s, GRAD_STUDENT g
+WHERE s.Class = 5;
+
+-- -----------------------------------------------------
+-- View `mydb`.`Current Section`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `mydb`.`Current Section`;
+USE `mydb`;
+CREATE  OR REPLACE VIEW `Current Section` AS
+SELECT s.Sec_no, s.Qtr, s.Syear
+FROM SECTION s, CURRENT_SECTION c
+WHERE s.QTR = c.Current_qtr and s.Syear = c.Current_year;
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;

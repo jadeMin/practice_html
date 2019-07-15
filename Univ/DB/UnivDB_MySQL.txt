@@ -1,0 +1,220 @@
+DROP TABLE MAJOR_GRADE_REPORT;
+
+DROP TABLE GRADE_REPORT;
+
+DROP TABLE SECTION;
+
+DROP TABLE PREREQUISITE;
+
+DROP TABLE COURSE;
+
+DROP TABLE STUDENT;
+
+
+
+
+
+
+CREATE TABLE STUDENT (
+	Name CHAR(10) NOT NULL,
+	Student_number INTEGER NOT NULL,
+	Class CHAR(1) NOT NULL,
+	Major CHAR(5) NOT NULL,
+	PRIMARY KEY (Student_number)
+) ENGINE = InnoDB;
+
+CREATE TABLE COURSE (
+	Course_name VARCHAR(30) NOT NULL,
+	Course_number CHAR(10) NOT NULL,
+	Credit_hours INTEGER NOT NULL,
+	Department CHAR(5) NOT NULL,
+	PRIMARY KEY (Course_number),
+	UNIQUE(Course_name, Department)
+) ENGINE = InnoDB;
+
+CREATE TABLE PREREQUISITE (
+	Course_number CHAR(10) NOT NULL,
+	Prerequisite_number CHAR(10) NOT NULL,
+	PRIMARY KEY (Course_number, Prerequisite_number),
+	FOREIGN KEY (Course_number) REFERENCES COURSE(Course_number)
+	ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY (Prerequisite_number) REFERENCES COURSE(Course_number)
+	ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+CREATE TABLE SECTION (
+	Section_identifier INT NOT NULL,
+	Course_number CHAR(10) NOT NULL,
+	Semester enum('Spring', 'Summer', 'Fall', 'Winter') NOT NULL,
+	Year decimal(4,0) NOT NULL,
+	Instructor CHAR(20) NOT NULL,
+	PRIMARY KEY (Section_identifier),
+	FOREIGN KEY (Course_number) REFERENCES COURSE(Course_number)
+	ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+CREATE TABLE GRADE_REPORT (
+	Student_number INTEGER NOT NULL,
+	Section_identifier INTEGER NOT NULL,
+	Grade CHAR(1),
+	PRIMARY KEY (Student_number, Section_identifier),
+	FOREIGN KEY (Student_number) REFERENCES STUDENT(Student_number)
+	ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY (Section_identifier) REFERENCES SECTION(Section_identifier)
+	ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+INSERT INTO STUDENT
+VALUES ('Brown', 8, 2, 'CS');
+
+INSERT INTO STUDENT
+VALUES ('Smith', 17, 1, 'CS');
+
+INSERT INTO COURSE
+VALUES ('Intro to Computer Science', 'CS1310', 4, 'CS');
+
+
+INSERT INTO COURSE 
+VALUES ('Data Structures', 'CS3320', 4, 'CS');
+
+
+INSERT INTO COURSE
+VALUES ('Database', 'CS3380', 3, 'CS');
+
+
+INSERT INTO COURSE
+VALUES ('Discrete Mathematics', 'MATH2410', 3, 'MATH');
+
+
+INSERT INTO SECTION 
+VALUES (85, 'MATH2410', 'Fall', 7, 'King');
+
+INSERT INTO SECTION 
+VALUES (92, 'CS1310', 'Fall', 7, 'Anderson');
+
+INSERT INTO SECTION 
+VALUES (102, 'CS3320', 'Spring', 8, 'Knuth');
+
+INSERT INTO SECTION 
+VALUES (112, 'MATH2410', 'Fall', 8, 'Chang');
+
+INSERT INTO SECTION 
+VALUES (119, 'CS1310', 'Fall', 8, 'Anderson');
+
+INSERT INTO SECTION
+VALUES (135, 'CS3380', 'Fall', 8, 'Stone');
+
+INSERT INTO GRADE_REPORT 
+VALUES (8, 85, 'A');
+
+INSERT INTO GRADE_REPORT 
+VALUES (8, 92, 'A');
+
+INSERT INTO GRADE_REPORT 
+VALUES (8, 102, 'B');
+
+INSERT INTO GRADE_REPORT 
+VALUES (8, 135, 'A');
+
+INSERT INTO GRADE_REPORT 
+VALUES (17, 112, 'B');
+
+INSERT INTO GRADE_REPORT 
+VALUES (17, 119, 'C');
+
+INSERT INTO PREREQUISITE
+VALUES ('CS3320', 'CS1310');
+
+INSERT INTO PREREQUISITE
+VALUES ('CS3380', 'CS3320');
+
+INSERT INTO PREREQUISITE
+VALUES ('CS3380', 'MATH2410');
+
+SELECT * FROM STUDENT;
+
+SELECT * FROM COURSE;
+
+SELECT * FROM SECTION;
+
+SELECT * FROM GRADE_REPORT;
+
+SELECT * FROM PREREQUISITE;
+
+SELECT NAME 
+FROM STUDENT n, COURSE c, SECTION s, GRADE_REPORT g
+WHERE c.Course_name = 'Database' and c.Course_number = s.Course_number and 
+s.Section_identifier = g.Section_identifier and g.Student_number = n.Student_number;
+
+INSERT INTO GRADE_REPORT
+VALUES (17, 85, NULL);
+
+SELECT distinct NAME
+FROM STUDENT n, COURSE c, SECTION s, SECTION e, GRADE_REPORT g, GRADE_REPORT r 
+WHERE n.Student_number = g.Student_number and n.Student_number = r.Student_number and
+g.Section_identifier = s.Section_identifier and r.Section_identifier = e.Section_identifier and
+e.Course_number = c.Course_number and s.Course_number = c.Course_number and
+not (e.Section_identifier = s.Section_identifier);
+
+(SELECT o.Course_name
+FROM COURSE c, COURSE o, PREREQUISITE p
+WHERE c.Course_name = 'Database' and p.Course_number = c.Course_number and p.Prerequisite_number = o.Course_number
+)
+UNION
+
+(SELECT u.Course_name
+FROM COURSE c, COURSE o, COURSE u, PREREQUISITE p, PREREQUISITE r
+WHERE c.Course_name = 'Database' and p.Course_number = c.Course_number and p.Prerequisite_number = o.Course_number and p.Prerequisite_number = r.Course_number and 
+r.Prerequisite_number = u.Course_number
+)
+UNION
+
+(SELECT s.Course_name
+FROM COURSE c, COURSE o, COURSE u, COURSE s, PREREQUISITE p, PREREQUISITE r, PREREQUISITE e
+WHERE c.Course_name = 'Database' and p.Course_number = c.Course_number and p.Prerequisite_number = o.Course_number and p.Prerequisite_number = r.Course_number and 
+r.Prerequisite_number = u.Course_number and r.Prerequisite_number = e.Course_number and 
+e.Prerequisite_number = s.Course_number
+);
+
+CREATE TABLE MAJOR_GRADE_REPORT(
+	Student_number INT NOT NULL,
+	Section_identifier INT NOT NULL,
+	Grade CHAR(1),
+	PRIMARY KEY(Student_number, Section_identifier),
+	FOREIGN KEY (Student_number) REFERENCES STUDENT(Student_number)
+	ON UPDATE CASCADE ON DELETE CASCADE,
+	FOREIGN KEY (Section_identifier) REFERENCES SECTION(Section_identifier)
+	ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+INSERT INTO MAJOR_GRADE_REPORT
+SELECT g.Student_number, g.Section_identifier, g.Grade 
+FROM GRADE_REPORT g, SECTION s, COURSE c, STUDENT t 
+WHERE t.Student_number = g.Student_number and g.Section_identifier = s.Section_identifier and s.Course_number = c.Course_number and t.Major = c.Department 
+
+(Major, Student_number, Student_name, Course_number,
+Course_name, Grade, Year, Semester)
+
+SELECT t.Major, t.Student_number, t.Name, s.Course_number, c.Course_name, g.Grade, s.Year, s.Semester
+FROM STUDENT t, COURSE c, SECTION s, GRADE_REPORT g
+WHERE t.Student_number = g.Student_number and g.Section_identifier = s.Section_identifier and s.Course_number = c.Course_number
+ORDER BY Student_number, Year, Semester, Grade DESC;
+
+UPDATE GRADE_REPORT
+SET Grade = 'F'
+WHERE Student_number IN (
+SELECT Student_number
+FROM STUDENT
+WHERE Name = 'Brown')
+AND Section_identifier IN (
+SELECT Section_identifier
+FROM SECTION
+WHERE Course_number IN (
+SELECT Course_number
+FROM COURSE
+WHERE Course_name = 'Database')
+);
+
+UPDATE STUDENT
+SET Student_number = 9
+WHERE Name = 'Brown';

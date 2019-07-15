@@ -1,0 +1,177 @@
+SELECT CONCAT(e.fname, ' ', e.minit, '. ', e.lname) AS 'Employee name'
+FROM EMPLOYEE e, WORKS_ON w, PROJECT p
+WHERE p.pname = 'ProductX' and p.pnumber = w.pno 
+and e.dno = 5 and e.ssn = w.essn and w.hours > 10;
+
+SELECT CONCAT(e.fname, ' ', e.minit, '. ', e.lname) AS 'Employee name'
+FROM EMPLOYEE e
+WHERE EXISTS (
+SELECT *
+FROM DEPENDENT d
+WHERE e.sex = d.sex and d.essn = e.ssn
+);
+
+SELECT CONCAT(e.fname, ' ', e.minit, '. ', e.lname) AS 'Employee name'
+FROM EMPLOYEE e
+WHERE EXISTS (
+SELECT *
+FROM EMPLOYEE m
+WHERE m.fname = 'Franklin' and m.lname =  'Wong' and e.superssn = m.ssn
+);
+
+SELECT p.pname AS 'Project name', SUM(w.hours) AS 'Total hours'
+FROM PROJECT p, WORKS_ON w
+WHERE p.pnumber = w.pno
+GROUP BY p.pnumber;
+
+SELECT CONCAT(e.fname, ' ', e.minit, '. ', e.lname) AS 'Employee name'
+FROM EMPLOYEE e, DEPARTMENT d, PROJECT p
+WHERE d.dname = 'Administration' and d.dnumber = p.dnum and NOT EXISTS ( 
+SELECT *
+FROM WORKS_ON w
+WHERE p.pnumber = w.pno and w.essn != e.ssn);
+////////////////////////////////////////////////////////////////
+SELECT CONCAT(e.fname, ' ', e.minit, '. ', e.lname) AS 'Employee name'
+FROM EMPLOYEE e,  WORKS_ON w, WORKS_ON r
+WHERE w.pno in (
+SELECT p.pnumber
+FROM PROJECT p, DEPARTMENT d
+WHERE d.dname = 'Administration' and d.dnumber = p.dnum) 
+and r.pno in (select p.pnumber
+FROM PROJECT p, DEPARTMENT d
+WHERE d.dname = 'Administration' and d.dnumber = p.dnum) 
+and w.pno > r.pno and w.essn = e.ssn and r.essn = e.ssn;
+/////////////////////////////////////////////////////////////////
+
+SELECT CONCAT(e.fname, ' ', e.minit, '. ', e.lname) AS 'Employee name'
+FROM EMPLOYEE e
+WHERE NOT EXISTS (
+SELECT *
+FROM WORKS_ON w, PROJECT p
+WHERE p.plocation = 'Houston' and p.pnumber = w.pno and w.essn = e.ssn
+);
+
+SELECT d.dname as 'Department name', ROUND(AVG(salary), 2) as 'Average Salary'
+FROM EMPLOYEE e, DEPARTMENT d
+WHERE d.dnumber = e.dno
+GROUP BY dno;
+
+SELECT ROUND(AVG(salary), 2) as 'Average salary' 
+FROM EMPLOYEE
+WHERE sex = 'F';
+
+SELECT CONCAT(e.fname, ' ', e.minit, '. ', e.lname) AS 'Employee name', e.Address
+FROM EMPLOYEE e
+WHERE EXISTS (
+SELECT *
+FROM PROJECT p, WORKS_ON w
+WHERE p.plocation = 'Houston' and w.pno = p.pnumber and w.essn = e.ssn
+) AND NOT EXISTS (
+SELECT *
+FROM DEPARTMENT d, DEPT_LOCATIONS l
+WHERE l.dlocation = 'Houston' and d.dnumber = l.dnumber and e.dno = d.dnumber
+);
+
+SELECT e.lname as 'Last name'
+FROM EMPLOYEE e
+WHERE EXISTS (
+SELECT *
+FROM DEPARTMENT d
+WHERE d.mgrssn = e.ssn
+) AND NOT EXISTS (
+SELECT *
+FROM DEPENDENT d
+WHERE d.essn = e.ssn
+);
+
+SELECT CONCAT(e.fname, ' ', e.minit, '. ', e.lname) AS 'Employee name'
+FROM EMPLOYEE e
+WHERE e.dno IN (
+SELECT m.dno
+FROM EMPLOYEE m
+WHERE NOT EXISTS (
+SELECT *
+FROM EMPLOYEE n
+WHERE n.salary > m.salary
+));
+
+SELECT CONCAT(e.fname, ' ', e.minit, '. ', e.lname) AS 'Employee name'
+FROM EMPLOYEE e
+WHERE EXISTS (
+SELECT *
+FROM EMPLOYEE m
+WHERE e.superssn = m.ssn and EXISTS (
+SELECT m.ssn
+FROM EMPLOYEE j
+WHERE j.fname = "James" and j.lname = "Borg" and j.ssn = m.superssn
+));
+
+SELECT CONCAT(e.fname, ' ', e.minit, '. ', e.lname) AS 'Employee name'
+FROM EMPLOYEE e, EMPLOYEE m, EMPLOYEE j
+WHERE j.fname = "James" and j.lname = "Borg" and j.ssn = m.superssn and m.ssn = e.superssn;
+
+SELECT DISTINCT CONCAT(e.fname, ' ', e.minit, '. ', e.lname) AS 'Employee name'
+FROM EMPLOYEE e, EMPLOYEE t
+WHERE e.salary >= t.salary +10000 and t.salary IN (
+SELECT MIN(salary)
+FROM EMPLOYEE
+);
+
+CREATE VIEW DEPT_VIEW
+AS
+SELECT dname, fname, minit, lname, salary
+FROM EMPLOYEE, DEPARTMENT
+WHERE mgrssn = ssn;
+
+CREATE VIEW RESEARCH_DEPT_VIEW(elname, eminit, efname, slname, sminit, sfname, esalary)
+AS
+SELECT e.lname, e.minit, e.fname, s.lname, s.minit, s.fname, e.salary
+FROM EMPLOYEE e, EMPLOYEE s, DEPARTMENT d
+WHERE d.dname = "Research" and d.dnumber = e.dno and e.superssn = s.ssn;
+
+CREATE VIEW PROJECT_VIEW (pname, dname, num_emps, total_hours)
+AS
+SELECT pname, dname, COUNT(*), SUM(hours)
+FROM PROJECT, DEPARTMENT, WORKS_ON
+WHERE dnum = dnumber and pnumber = pno
+GROUP BY pno;
+
+CREATE VIEW PROJECT_VIEW_GT2(pname, dname, num_emps, total_hours)
+AS
+SELECT pname, dname, COUNT(*), SUM(hours) 
+FROM PROJECT, DEPARTMENT, WORKS_ON
+WHERE dnum = dnumber and pnumber = pno
+GROUP BY pno
+HAVING COUNT(*) > 2;
+
+delimiter ;
+
+DROP TABLE salary_audit;
+
+CREATE TABLE salary_audit (
+ssn CHAR(9) NOT NULL,
+before_salary DECIMAL(10, 2),
+after_salary DECIMAL(10,2),
+u_datetime DATETIME NOT NULL,
+PRIMARY KEY(ssn, u_datetime),
+FOREIGN KEY(ssn) REFERENCES EMPLOYEE(Ssn)
+ON UPDATE CASCADE ON DELETE CASCADE
+)ENGINE = InnoDB;
+
+delimiter $$
+
+DROP TRIGGER SALARY_VIOLATION;
+
+CREATE TRIGGER SALARY_VIOLATION
+BEFORE UPDATE ON EMPLOYEE
+FOR EACH ROW
+BEGIN
+IF (NOT (NEW.salary = OLD.salary))
+THEN INSERT INTO salary_audit VALUES (NEW.ssn, OLD.salary, NEW.salary, now());
+END IF;
+END;
+$$
+
+select * from salary_audit;
+update EMPLOYEE set salary = 2 * salary where dno = 5;
+select * from salary_audit;
